@@ -12,61 +12,73 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
-public class BlogCotroller {
+public class BlogController {
     private final PostRepository postRepository;
 
-    //Inyeccion de dependencias
-    public BlogCotroller(PostRepository postRepository) {
+    // Inyección de dependencias por constructor
+    public BlogController(PostRepository postRepository) {
         this.postRepository = postRepository;
     }
 
-    //Metodo que muestra la pagnian raiz
+    // Página principal: lista de posts, del más reciente al más antiguo
     @GetMapping("/")
     public String index(Model model) {
         model.addAttribute("posts", postRepository.findAllByOrderByCreateTimeDesc());
         return "index";
     }
 
-    //Metodos para hacer post
+    // Formulario para crear un post nuevo
     @GetMapping("/nuevo")
     public String showForm(Model model) {
         model.addAttribute("post", new Post());
         return "formulario";
     }
+
+    // Guarda un post nuevo o actualiza uno existente
     @PostMapping("/guardar")
     public String savePost(@Valid @ModelAttribute("post") Post post, BindingResult result) {
 
-        // Si la validación falla (ej. título vacío), detenemos todo y volvemos a mostrar el form
+        // Si la validación falla (ej. título vacío), volvemos a mostrar el formulario con los errores
         if (result.hasErrors()) {
             return "formulario";
         }
 
-        postRepository.save(post);
-        return "redirect:/";
+        if (post.getId() == null) {
+            postRepository.save(post);
+            return "redirect:/";
+        }
+
+        // Al editar, solo actualizamos los campos del formulario para no perder la fecha de creación
+        Post existente = postRepository.findById(post.getId()).orElse(null);
+        if (existente == null) {
+            return "redirect:/";
+        }
+        existente.setTitle(post.getTitle());
+        existente.setContent(post.getContent());
+        postRepository.save(existente);
+        return "redirect:/post/" + existente.getId();
     }
 
-    //Metodo para editar el post
+    // Formulario de edición con los datos del post
     @GetMapping("/editar/{id}")
     public String showUpdateForm(@PathVariable Long id, Model model) {
         Post post = postRepository.findById(id).orElse(null);
-
         if (post == null) {
             return "redirect:/";
         }
 
-        //Mandamos el post encontrado al formulario
         model.addAttribute("post", post);
         return "formulario";
     }
-    
-    //Metodo para eliminar post
-    @GetMapping("/eliminar/{id}")
-        public String eliminarPost(@PathVariable Long id) {
+
+    // Elimina un post (POST para que un simple enlace o un rastreador no borre datos)
+    @PostMapping("/eliminar/{id}")
+    public String eliminarPost(@PathVariable Long id) {
         postRepository.deleteById(id);
-	    return "redirect:/";
+        return "redirect:/";
     }
 
-    //Metodo para ver le post
+    // Vista de detalle de un post
     @GetMapping("/post/{id}")
     public String verPost(@PathVariable Long id, Model model) {
         // Si no lo encuentra, redirige al inicio en lugar de romperse
@@ -78,11 +90,4 @@ public class BlogCotroller {
         model.addAttribute("post", post);
         return "detalle";
     }
-
-
-
-
-
-
-
 }

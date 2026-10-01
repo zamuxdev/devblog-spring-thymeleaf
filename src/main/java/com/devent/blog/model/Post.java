@@ -30,4 +30,8 @@ public class Post {
     protected void onCreate() {
         this.createTime = LocalDateTime.now();
     }
+    @PreUpdate
+    protected void onUpdate() {
+        this.updateTime = LocalDateTime.now();
+    }
 }

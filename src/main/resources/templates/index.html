@@ -22,12 +22,11 @@
                         <div class="mt-auto d-grid gap-2">
                             <a th:href="@{/post/{id}(id=${post.id})}" class="btn btn-primary btn-sm">Leer más</a>
 
-                            <a th:href="@{/eliminar/{id}(id=${post.id})}"
-                                class="btn btn-danger btn-sm"
-                                onclick="return confirm('¿Seguro que quieres borrar este post?')">
-                                Eliminar
-                            </a>
                             <a th:href="@{/editar/{id}(id=${post.id})}" class="btn btn-warning btn-sm">Editar</a>
+                            <form th:action="@{/eliminar/{id}(id=${post.id})}" method="post" class="d-grid"
+                                  onsubmit="return confirm('¿Seguro que quieres borrar este post?')">
+                                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                            </form>
                         </div>
                     </div>
                 </div>
